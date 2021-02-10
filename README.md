@@ -106,7 +106,7 @@ Then append this to the bottom of that list:
 dkim-signature:v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025; h=from:mime-version:date:message-id:subject:to; bh=YOkovY1y1GXe8mYwThyvrMFN03ECH7w+Vd39CZAkvUo=; b=
 ```
 Note that I converted all the header names to lowercase. This is because the canonicalization was set to "relaxed" in the "c" tag. Also I removed all CRLF characters from the dkim-signature header and removed all repeating whitespace (aka: folding). The block of text now consists of 7 lines; from the "from" field to the "dkim-signature" field. There is "no CRLF" at the end of the "b=". This data is then hashed to produce a 32 byte string that is the SHA256 hash of the data.  
-Well call that hash "x" for now. We'll need it in a minute.
+Let's call that hash "x" for now. We'll need it in a minute.
 
 To complete the next step we are going to need the public key because it contains the public exponent and the modulus that corresponds to the private key used to sign this data. That is retrieved via DNS. Anyone can do it:
 ```
@@ -122,3 +122,5 @@ If x != y:
   we have a problem
   exit()
 ```
+# A final note on DKIM
+While it's true that only headers are signed during the DKIM signing process I should remind you that 1 of those pieces of the signed header data is the "bh" tag. A person new to DKIM might think that since only the headers are signed, that they can somehow change the body without affecting the signature. They might think "Hey I can change the body, then just change the bh tag to match the new hash!". That would definately get you past step 1 of the verification process but would cause a verification failure in the next steps. Because during the next steps, the "bh" tag and its value were signed during the signing process on the headers. So while the body of the email isn't signed, it's hash IS signed. This is suffcient to assert that neither the involved headers of any part of the body has been altered since the email was originally sent.
