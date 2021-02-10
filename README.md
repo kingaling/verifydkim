@@ -94,16 +94,16 @@ The first step in the verification process is to verify the "bh" tag. This is th
 
 Assuming all went well, the next step is to assemble the headers specified in the "h" tag. This tells DKIM which headers are being included in the signing process. The headers are assembled "in the order they appear in the 'h' tag". So, given the value of the "h" tag, build a list that looks like this:
 ```
-from: Some Person <redacted@gmail.com>
-mime-version: 1.0
-date: Tue, 9 Feb 2021 20:23:56 -0500
-message-id: <CAJj9PrvNj0Yp6666666666+KQ1E2t8VaMrT6wgLz_Dt+BMULWQ@mail.gmail.com>
-subject: It's been awhile
-to: redacted@redacted.net
+from:Some Person <redacted@gmail.com>
+mime-version:1.0
+date:Tue, 9 Feb 2021 20:23:56 -0500
+message-id:<CAJj9PrvNj0Yp6666666666+KQ1E2t8VaMrT6wgLz_Dt+BMULWQ@mail.gmail.com>
+subject:It's been awhile
+to:redacted@redacted.net
 ```
 Then append this to the bottom of that list:
 ```
-dkim-signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025; h=from:mime-version:date:message-id:subject:to; bh=YOkovY1y1GXe8mYwThyvrMFN03ECH7w+Vd39CZAkvUo=; b=
+dkim-signature:v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025; h=from:mime-version:date:message-id:subject:to; bh=YOkovY1y1GXe8mYwThyvrMFN03ECH7w+Vd39CZAkvUo=; b=
 ```
 Note that I converted all the header names to lowercase. This is because the canonicalization was set to "relaxed" in the "c" tag. Also I removed all CRLF characters from the dkim-signature header and removed all repeating whitespace (aka: folding). The block of text now consists of 7 lines; from the "from" field to the "dkim-signature" field. There is "no CRLF" at the end of the "b=". This data is then hashed to produce a 32 byte string that is the SHA256 hash of the data.  
 Well call that hash "x" for now. We'll need it in a minute.
@@ -112,7 +112,7 @@ To complete the next step we are going to need the public key because it contain
 ```
 dig TXT 20161025._domainkey.gmail.com
 ```
-I got that FQDN by looking at the "s" tag and the "d" tag in the header and then placing a "\_domainkey" right in between them.
+I got that FQDN by looking at the "s" tag and the "d" tag in the header and then inserted "\_domainkey" right in between them.
 
 At this point we need to look at the data that shipped with the email that was in the "b" tag. That data needs to be base64 decoded, converted to a long integer, raised to the power of the public keys exponent and modded by the public keys modulus. Psuedo code: pow(bytes2longint(base64decode(btag)), pub['e'], pub['n']).  
 We'll call this result "y". This should be equal to the hash before it was raised to the power of the "private" exponent and base64 encoded.
@@ -140,5 +140,7 @@ Technically this is encrypting the data with the private key but since everyone 
 pow(a, d, n) = b.  
 
 Using the public key to decrypt data in "b" that was encrypted by the private key.  
-Again, since everyone has access to the public key its not very effective "encryption" but it does prove that the private key did it, thus... proving the data came from the authorized party:  
+Again, since everyone has access to the public key its not very effective "encryption" but it does prove that the private key did the signing, thus... proving the data came from the authorized party:  
 pow(b, e, n) must = "a" or something's wrong.
+
+For securely encrypting data with RSA, you encrypt with the public exponent since only 1 person has the private exponent to decrypt it.
