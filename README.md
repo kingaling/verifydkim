@@ -10,7 +10,7 @@ We always hear about cyber security compromises where this was leaked and that w
 dkimpy 1.0.5 can be installed with pip and as of this writing, it is the latest version.  
 Developers site is here: https://launchpad.net/dkimpy
 
-While following the execution of dkimpy I learned that the dnsfunc parameter is flexible. You can specify other dns functions beside being stuck with the one provided. Following some more I found exactly where the DNS response emerges with the TXT record and supplies said record to the rest of the code. The dnsfunc parameter "expects" a callable function. Editing the source code to accept a string instead of a function may have broken other things in the course of making my code work so, I learned about Python classes and how to inherit functionality etc.
+While following the execution of dkimpy I learned that the dnsfunc parameter is flexible. You can specify other dns functions beside being stuck with the one provided. Following some more I found exactly where the DNS response emerges with the TXT record and supplies said record to the rest of the code. The dnsfunc parameter "expects" a callable function. Editing the source code to accept a string instead of a function may have broken other things in the course of making my code work so, I learned about Python classes and how to inherit functionality etc. Yup, it was a fine time for some hands-on-learning.
 
 verifydkim.py contains a new class that inherits the functionality of the original dkimpy code. Additionally, there are two functions that effectively override the behavior of the originals and provide more flexibility. That flexibility being: Do I want to use the built in DNS function or do I want to forego that and just tell it exactly what public key to use.
 
@@ -122,25 +122,3 @@ If x != y:
   we have a problem
   exit()
 ```
-
-# Quick and dirty RSA example to show how things are signed and verified
-A private key contains the following things we need to do this math:  
-n: the modulus  
-e: the public exponent  
-d: the private exponent
-
-A public key contains this:  
-n: the modulus  
-e: the public exponent
-
-
-We have a value "a".  
-Using the private key, sign the data in "a".  
-Technically this is encrypting the data with the private key but since everyone can decrypt it with the public key it's not very good encryption. We just call it signing since only one entity should have been in possession of the private exponent:  
-pow(a, d, n) = b.  
-
-Using the public key to decrypt data in "b" that was encrypted by the private key.  
-Again, since everyone has access to the public key its not very effective "encryption" but it does prove that the private key did the signing, thus... proving the data came from the authorized party:  
-pow(b, e, n) must = "a" or something's wrong.
-
-For securely encrypting data with RSA, you encrypt with the public exponent since only 1 person has the private exponent to decrypt it.
